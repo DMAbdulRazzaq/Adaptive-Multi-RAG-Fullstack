@@ -1,5 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 import { listAnalysis } from "../services/api";
+
+const TYPE_COLORS = {
+  reasoning: "#7c5fff",
+  summarization: "#4ecdc4",
+  multi_hop: "#ffb703",
+  direct: "#06d6a0",
+  standard: "#4895ef",
+  unknown: "#8d99ae",
+};
+
+const PIE_PALETTE = ["#7c5fff", "#4ecdc4", "#ffb703", "#06d6a0", "#f72585", "#4895ef"];
 
 function LiveAnalysisPanel() {
   const [analyses, setAnalyses] = useState([]);
@@ -39,6 +65,47 @@ function LiveAnalysisPanel() {
 
   const totalTokens = analyses.reduce((acc, a) => acc + (a.context_tokens || 0), 0);
 
+  // Chart 1: Latency timeline (in chronologic order for graph)
+  const latencyData = useMemo(() => {
+    return [...analyses]
+      .reverse()
+      .map((item, idx) => ({
+        index: `Q${idx + 1}`,
+        query: item.query.length > 30 ? item.query.substring(0, 30) + "…" : item.query,
+        latencyMs: Math.round(item.latency_ms || 0),
+        latencySec: Number(((item.latency_ms || 0) / 1000).toFixed(1)),
+        chunks: item.retrieved_chunks || 0,
+        confidencePct: Math.round((item.confidence || 0) * 100),
+      }));
+  }, [analyses]);
+
+  // Chart 2: Query type distribution
+  const distributionData = useMemo(() => {
+    const counts = {};
+    analyses.forEach((a) => {
+      const t = (a.query_type || "standard").toLowerCase();
+      counts[t] = (counts[t] || 0) + 1;
+    });
+    return Object.keys(counts).map((key) => ({
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+      count: counts[key],
+      rawKey: key,
+    }));
+  }, [analyses]);
+
+  // Chart 3: Chunks & Confidence comparison
+  const retrievalData = useMemo(() => {
+    return [...analyses]
+      .reverse()
+      .slice(-8)
+      .map((item, idx) => ({
+        name: `Q${idx + 1}`,
+        chunks: item.retrieved_chunks || 0,
+        confidence: Math.round((item.confidence || 0) * 100),
+        query: item.query.length > 25 ? item.query.substring(0, 25) + "…" : item.query,
+      }));
+  }, [analyses]);
+
   if (loading) {
     return (
       <div className="empty-page">
@@ -73,7 +140,7 @@ function LiveAnalysisPanel() {
           </p>
         </div>
         <button className="primary-button" onClick={loadData}>
-          <span>↻</span> Refresh
+          <span>↻</span> Refresh Telemetry
         </button>
       </div>
 
@@ -93,8 +160,8 @@ function LiveAnalysisPanel() {
             <div className="stat-icon">⚡</div>
             <span className="stat-label">Avg Latency</span>
           </div>
-          <div className="stat-value">{avgLatency} ms</div>
-          <div className="stat-description">End-to-end response time</div>
+          <div className="stat-value">{(avgLatency / 1000).toFixed(1)}s</div>
+          <div className="stat-description">{avgLatency} ms average latency</div>
         </div>
 
         <div className="stat-card">
@@ -112,7 +179,95 @@ function LiveAnalysisPanel() {
             <span className="stat-label">Context Tokens</span>
           </div>
           <div className="stat-value">{totalTokens.toLocaleString()}</div>
-          <div className="stat-description">Tokens fed to LLM</div>
+          <div className="stat-description">Tokens synthesized</div>
+        </div>
+      </div>
+
+      {/* CHARTS GRID */}
+      <div className="charts-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px", marginBottom: "32px" }}>
+        {/* CHART 1: LATENCY TIMELINE */}
+        <div className="pipeline-card" style={{ padding: "20px" }}>
+          <div className="eyebrow">PERFORMANCE TIMELINE</div>
+          <h3 style={{ margin: "4px 0 16px", fontSize: "15px", color: "var(--text)" }}>Response Latency (Seconds)</h3>
+          <div style={{ height: "220px", width: "100%" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={latencyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="latencyGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7c5fff" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="#7c5fff" stopOpacity={0.0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="index" stroke="var(--text-4)" fontSize={11} />
+                <YAxis stroke="var(--text-4)" fontSize={11} unit="s" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "var(--bg-3)", borderColor: "var(--border)", borderRadius: "8px", fontSize: "12px" }}
+                  formatter={(value) => [`${value}s`, "Latency"]}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.query || label}
+                />
+                <Area type="monotone" dataKey="latencySec" stroke="#7c5fff" strokeWidth={2} fillOpacity={1} fill="url(#latencyGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* CHART 2: ROUTING INTENT DISTRIBUTION */}
+        <div className="pipeline-card" style={{ padding: "20px" }}>
+          <div className="eyebrow">ADAPTIVE ROUTER</div>
+          <h3 style={{ margin: "4px 0 16px", fontSize: "15px", color: "var(--text)" }}>Query Intent Classification</h3>
+          <div style={{ height: "220px", width: "100%" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={distributionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="count"
+                >
+                  {distributionData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={TYPE_COLORS[entry.rawKey] || PIE_PALETTE[index % PIE_PALETTE.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: "var(--bg-3)", borderColor: "var(--border)", borderRadius: "8px", fontSize: "12px" }}
+                  formatter={(value, name) => [`${value} queries`, name]}
+                />
+                <Legend
+                  formatter={(value) => <span style={{ color: "var(--text-2)", fontSize: "12px" }}>{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* CHART 3: RETRIEVAL DEPTH & CONFIDENCE */}
+        <div className="pipeline-card" style={{ padding: "20px", gridColumn: "1 / -1" }}>
+          <div className="eyebrow">GROUNDEDNESS & EVIDENCE</div>
+          <h3 style={{ margin: "4px 0 16px", fontSize: "15px", color: "var(--text)" }}>Retrieved Chunks vs. Answer Confidence (%)</h3>
+          <div style={{ height: "200px", width: "100%" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={retrievalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="name" stroke="var(--text-4)" fontSize={11} />
+                <YAxis yAxisId="left" stroke="var(--accent-2)" fontSize={11} unit=" chunks" />
+                <YAxis yAxisId="right" orientation="right" stroke="var(--green)" fontSize={11} unit="%" domain={[0, 100]} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "var(--bg-3)", borderColor: "var(--border)", borderRadius: "8px", fontSize: "12px" }}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.query || label}
+                />
+                <Legend formatter={(value) => <span style={{ color: "var(--text-2)", fontSize: "12px" }}>{value}</span>} />
+                <Bar yAxisId="left" dataKey="chunks" name="Retrieved Chunks" fill="var(--accent-2)" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="confidence" name="Confidence (%)" fill="var(--green)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
@@ -121,7 +276,7 @@ function LiveAnalysisPanel() {
         <div className="pipeline-card" style={{ marginBottom: "32px" }}>
           <div className="pipeline-header">
             <div>
-              <div className="eyebrow">QUERY TRACE</div>
+              <div className="eyebrow">QUERY TRACE INSPECTION</div>
               <h2>&ldquo;{selectedRecord.query}&rdquo;</h2>
             </div>
             <div className="pipeline-status">
@@ -155,7 +310,7 @@ function LiveAnalysisPanel() {
             <div className="pipeline-step">
               <div className="pipeline-number">04</div>
               <strong>Model</strong>
-              <span style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {selectedRecord.model || "Gemini"}
               </span>
             </div>
@@ -172,8 +327,8 @@ function LiveAnalysisPanel() {
 
       {/* RECENT QUERIES TABLE */}
       <div className="section-header">
-        <h2>Recent Query Analysis History</h2>
-        <p>Click any row to inspect its full pipeline trace above.</p>
+        <h2>Recent Query Execution Log</h2>
+        <p>Click any row to trace the exact routing and latency breakdown above.</p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
