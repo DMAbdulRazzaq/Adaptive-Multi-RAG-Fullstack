@@ -1,0 +1,5 @@
+.venv\Scripts\python main.py --document D:\adaptive_rag_fixed\frankenstein.pdf --question "Can you tell me the main characters of the story" --backend ollama --model llama3.2
+
+.venv\Scripts\python main.py --document D:\adaptive_rag_fixed\frankenstein.pdf --question "Can you tell me the main characters of the story" --backend openai --model gpt-4o-mini
+
+.venv\Scripts\python main.py --document D:\adaptive_rag_fixed\final_paper_after_check.pdf --question "What algorithm is proposed in this paper?" --backend ollama --model llama3.2

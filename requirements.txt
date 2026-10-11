@@ -1,0 +1,30 @@
+# ── FastAPI & Server ────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+
+# ── Authentication & Security ───────────────────────────────────────────────
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.0
+
+# ── Database (MongoDB Atlas) ────────────────────────────────────────────────
+pymongo>=4.6.0
+dnspython>=2.6.0
+certifi>=2024.2.2
+
+# ── Document Loading & NLP ──────────────────────────────────────────────────
+pymupdf>=1.23.0
+python-docx>=1.1.0
+nltk>=3.8.1
+python-dotenv>=1.0.0
+
+# ── LLM & AI Providers ──────────────────────────────────────────────────────
+google-genai>=1.0.0
+openai>=1.12.0
+
+# ── Vector Search & Math ────────────────────────────────────────────────────
+numpy>=1.24.0
+faiss-cpu>=1.7.4
