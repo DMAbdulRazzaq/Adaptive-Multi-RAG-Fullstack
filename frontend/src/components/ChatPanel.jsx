@@ -1,21 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {
+  Sparkles,
+  ArrowUp,
+  Copy,
+  Check,
+  Trash2,
+  BookOpen,
+  AlignLeft,
+  Compass,
+  FileUp,
+  UploadCloud,
+} from "lucide-react";
 import { getConversation, sendChatMessage } from "../services/api";
 
 const SUGGESTIONS = [
   {
-    icon: "◉",
+    icon: <BookOpen size={16} color="var(--accent-2)" />,
     title: "Understand the research",
     text: "What is the main contribution of this document?",
   },
   {
-    icon: "≡",
+    icon: <AlignLeft size={16} color="#4ecdc4" />,
     title: "Summarize a section",
     text: "Summarize the methodology used in this document.",
   },
   {
-    icon: "◇",
+    icon: <Compass size={16} color="#ffb703" />,
     title: "Analyze the approach",
     text: "Why did the authors choose this approach?",
   },
@@ -165,16 +177,18 @@ function ChatPanel({
   if (documents.length === 0) {
     return (
       <div className="empty-page">
-        <div className="empty-icon">▣</div>
+        <div className="empty-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FileUp size={42} color="var(--accent-2)" />
+        </div>
         <div className="eyebrow">RESEARCH ASSISTANT</div>
         <h1>Upload a document first.</h1>
         <p>
           Ask questions grounded in your documents. Upload one to get
           started with adaptive retrieval.
         </p>
-        <button className="primary-button" onClick={onNavigateToDocuments}>
-          <span>＋</span>
-          Upload a document
+        <button className="primary-button" onClick={onNavigateToDocuments} style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <UploadCloud size={16} />
+          <span>Upload a document</span>
         </button>
       </div>
     );
@@ -214,8 +228,10 @@ function ChatPanel({
               }
             }}
             title="Clear and delete this conversation"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            🗑 Clear Chat
+            <Trash2 size={13} />
+            <span>Clear Chat</span>
           </button>
         )}
       </div>
@@ -227,8 +243,8 @@ function ChatPanel({
         {!hasMessages && !loadingHistory && (
           <>
             <section className="welcome">
-              <div className="welcome-mark">
-                <span>A</span>
+              <div className="welcome-mark" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles size={28} color="#fff" />
               </div>
 
               <p className="eyebrow">ADAPTIVE MULTI-RAG</p>
@@ -252,7 +268,9 @@ function ChatPanel({
                   key={s.title}
                   onClick={() => submitQuestion(s.text)}
                 >
-                  <div className="suggestion-icon">{s.icon}</div>
+                  <div className="suggestion-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {s.icon}
+                  </div>
 
                   <div className="suggestion-content">
                     <strong>{s.title}</strong>
@@ -280,7 +298,9 @@ function ChatPanel({
             {sending && (
               <div className="chat-bubble assistant pending">
                 <div className="chat-avatar-row">
-                  <div className="assistant-avatar">✦</div>
+                  <div className="assistant-avatar" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Sparkles size={12} />
+                  </div>
                   <span className="chat-bubble-role">Assistant</span>
                 </div>
                 <div className="chat-bubble-body">
@@ -321,8 +341,9 @@ function ChatPanel({
             className={`send-button ${question.trim() ? "ready" : ""}`}
             title="Send message"
             disabled={sending || !question.trim()}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            ↑
+            <ArrowUp size={16} />
           </button>
         </form>
 
@@ -338,12 +359,6 @@ function ChatPanel({
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
-
-  const hasStats =
-    !isUser &&
-    (typeof message.confidence === "number" ||
-      message.chunksUsed != null ||
-      message.queryType);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -361,7 +376,9 @@ function MessageBubble({ message }) {
           </>
         ) : (
           <>
-            <div className="assistant-avatar">✦</div>
+            <div className="assistant-avatar" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={12} />
+            </div>
             <span className="chat-bubble-role">Assistant</span>
           </>
         )}
@@ -415,14 +432,24 @@ function MessageBubble({ message }) {
             className="copy-btn"
             onClick={handleCopy}
             title="Copy answer"
+            style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
           >
-            {copied ? "✓ Copied" : "Copy"}
+            {copied ? (
+              <>
+                <Check size={12} color="var(--green)" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy size={12} />
+                <span>Copy</span>
+              </>
+            )}
           </button>
         </div>
       )}
     </div>
   );
 }
-
 
 export default ChatPanel;

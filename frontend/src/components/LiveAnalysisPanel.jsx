@@ -14,6 +14,15 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+import {
+  RefreshCw,
+  BarChart3,
+  Zap,
+  CheckCircle2,
+  Layers,
+  Search,
+  Activity,
+} from "lucide-react";
 import { listAnalysis } from "../services/api";
 
 const TYPE_COLORS = {
@@ -139,8 +148,9 @@ function LiveAnalysisPanel() {
             Real-time telemetry showing adaptive query routing, vector retrieval, and LLM synthesis performance.
           </p>
         </div>
-        <button className="primary-button" onClick={loadData}>
-          <span>↻</span> Refresh Telemetry
+        <button className="primary-button" onClick={loadData} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <RefreshCw size={13} />
+          <span>Refresh Telemetry</span>
         </button>
       </div>
 
@@ -148,7 +158,9 @@ function LiveAnalysisPanel() {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-top">
-            <div className="stat-icon">◈</div>
+            <div className="stat-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <BarChart3 size={16} color="var(--accent-2)" />
+            </div>
             <span className="stat-label">Total Queries</span>
           </div>
           <div className="stat-value">{analyses.length}</div>
@@ -157,7 +169,9 @@ function LiveAnalysisPanel() {
 
         <div className="stat-card">
           <div className="stat-top">
-            <div className="stat-icon">⚡</div>
+            <div className="stat-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Zap size={16} color="#ffb703" />
+            </div>
             <span className="stat-label">Avg Latency</span>
           </div>
           <div className="stat-value">{(avgLatency / 1000).toFixed(1)}s</div>
@@ -166,7 +180,9 @@ function LiveAnalysisPanel() {
 
         <div className="stat-card">
           <div className="stat-top">
-            <div className="stat-icon">✦</div>
+            <div className="stat-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CheckCircle2 size={16} color="var(--green)" />
+            </div>
             <span className="stat-label">Avg Confidence</span>
           </div>
           <div className="stat-value">{avgConfidence}%</div>
@@ -175,7 +191,9 @@ function LiveAnalysisPanel() {
 
         <div className="stat-card">
           <div className="stat-top">
-            <div className="stat-icon">▣</div>
+            <div className="stat-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Layers size={16} color="#4ecdc4" />
+            </div>
             <span className="stat-label">Context Tokens</span>
           </div>
           <div className="stat-value">{totalTokens.toLocaleString()}</div>
@@ -343,7 +361,9 @@ function LiveAnalysisPanel() {
               background: selectedRecord?.id === item.id ? "var(--bg-4)" : "var(--bg-3)",
             }}
           >
-            <div className="document-row-icon">◉</div>
+            <div className="document-row-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Activity size={16} color="var(--accent-2)" />
+            </div>
             <div className="document-row-info">
               <strong>{item.query}</strong>
               <div style={{ display: "flex", gap: "8px", marginTop: "4px", fontSize: "11px", color: "var(--text-3)" }}>

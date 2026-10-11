@@ -1,267 +1,212 @@
-# Adaptive Multi-Stage RAG System
+# Adaptive Multi-Stage RAG Platform
 
-A production-ready, research-level **Adaptive Multi-Stage Retrieval-Augmented Generation** pipeline for long documents.
+An enterprise-grade, fullstack **Adaptive Multi-Stage Retrieval-Augmented Generation (RAG)** platform designed for deep reasoning, grounded document research, and real-time pipeline telemetry.
+
+Built with **FastAPI**, **MongoDB Atlas**, **React (Vite)**, **FAISS**, **Recharts**, and multi-model intelligence powered by **Google Gemini 3.5 Flash** & **OpenAI GPT-4o-mini**.
 
 ---
 
 ## Architecture Overview
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                        ADAPTIVE RAG PIPELINE                          │
-│                                                                       │
-│  Document  ──►  Ingestion  ──►  Chunking  ──►  Embeddings  ──►  FAISS │
-│                                                                       │
-│  Query  ──►  Router  ──►  Stage 3.1 Vector Search                     │
-│                      ──►  Stage 3.2 Cross-Encoder Re-Rank             │
-│                      ──►  Stage 3.3 Context Compression               │
-│                                                                       │
-│                 ──►  LLM Generation  ──►  Answer                      │
-│                                                                       │
-│                 ──►  Feedback Loop (if low confidence)                │
-│                                                                       │
-│                 ──►  Evaluation Metrics                               │
-└───────────────────────────────────────────────────────────────────────┘
+                      ┌────────────────────────────────────────┐
+                      │          React 18 + Vite (SPA)         │
+                      │  Modern Dark UI · Markdown · Recharts  │
+                      └───────────────────┬────────────────────┘
+                                          │ REST API / JWT
+                                          ▼
+                      ┌────────────────────────────────────────┐
+                      │          FastAPI Async Backend         │
+                      │  Auth · Document Store · Chat Pipeline │
+                      └──────────┬──────────────────┬──────────┘
+                                 │                  │
+                ┌────────────────┴─────┐            └────────────────┐
+                ▼                      ▼                             ▼
+       ┌──────────────────┐   ┌──────────────────┐          ┌──────────────────┐
+       │  MongoDB Atlas   │   │  Adaptive Router │          │   Vector Store   │
+       │  Cloud Cluster   │   │  Classifier (k)  │          │   FAISS / NumPy  │
+       │ Users, Chats,    │   └────────┬─────────┘          │ Pre-indexed docs │
+       │ Documents & Logs │            │                    └────────┬─────────┘
+       └──────────────────┘            │ Evidence                    │
+                                       ▼ Retrieval                   ▼
+                              ┌────────────────────────────────────────┐
+                              │           RAG Pipeline Engine          │
+                              │  Gemini Embeddings · Cross-Encoder     │
+                              │  Context Compression · Grounding Check │
+                              └──────────────────┬─────────────────────┘
+                                                 │
+                                                 ▼
+                              ┌────────────────────────────────────────┐
+                              │        Multi-LLM Synthesis Core        │
+                              │  Gemini 3.5 Flash  ·  GPT-4o-mini      │
+                              └────────────────────────────────────────┘
 ```
+
+---
+
+## Key Features & Capabilities
+
+- **Adaptive Query Routing**: Classifies queries (*Reasoning*, *Summarization*, *Fact Retrieval*, *Multi-Hop*) to dynamically calibrate retrieval depth ($k$) and context compression.
+- **Resilient Dual-Mode Embeddings**: Automatically falls back to Google's high-dimensional `gemini-embedding-001` API if local C++ / PyTorch `.dll` files are restricted by operating system security policies.
+- **Interactive Live Telemetry & Analytics**:
+  - **Latency Timeline**: Real-time response time tracking via Recharts Area graphs.
+  - **Intent Classification Donut**: Breakdown of query complexity and routing choices.
+  - **Retrieval Groundedness**: Dual-axis analysis correlating retrieved chunks against answer confidence.
+  - **Query Tracing**: Step-by-step visibility into Routing $\rightarrow$ Retrieval $\rightarrow$ Context $\rightarrow$ LLM.
+- **Enterprise Document Processing**: Supports PDF, DOCX, TXT, and Markdown with recursive semantic chunking.
+- **Persistent Cloud Database**: MongoDB Atlas integration managing users, document catalogs, conversations, and granular analytical telemetry.
+- **Modern Research UI**:
+  - Full Markdown rendering with syntax highlighting and structured bullet lists.
+  - Integrated copy-to-clipboard on AI responses.
+  - Clean vector iconography powered by Lucide Icons.
+  - Granular chat management (clear active conversation or delete past chats).
 
 ---
 
 ## Project Structure
 
 ```
-adaptive_rag/
-├── ingestion/
-│   └── document_loader.py      # PDF / DOCX / TXT loading + cleaning
-├── chunking/
-│   └── semantic_chunker.py     # Adaptive semantic chunking
-├── embeddings/
-│   └── embedder.py             # Sentence-Transformers batched encoding
-├── vector_store/
-│   └── faiss_store.py          # FAISS IndexFlatIP + metadata store
-├── retrieval/
-│   ├── retriever.py            # Stage 3.1 – vector retrieval
-│   ├── reranker.py             # Stage 3.2 – cross-encoder re-ranking
-│   └── adaptive_retrieval.py  # Stage 3.3 – dedup + merge + budget
-├── query_router/
-│   └── classifier.py          # Stage 4 – query type classification
-├── generation/
-│   └── generator.py           # Stage 6 – LLM generation (OpenAI / HF / stub)
-├── evaluation/
-│   └── metrics.py             # Stage 8 – evaluation metrics + RAGAS
-├── data/
-│   └── sample.txt             # Example document (Transformer paper overview)
-├── tests/
-│   └── test_pipeline.py       # Full test suite (unit + integration)
-├── main.py                    # CLI entry point
-└── requirements.txt
+Adaptive_Multi_RAG_Reactjs/
+├── backend/
+│   └── app/
+│       ├── api/
+│       │   ├── routes_auth.py       # User registration, login, JWT verification
+│       │   ├── routes_chat.py       # RAG execution, conversations, analysis telemetry
+│       │   └── routes_documents.py  # File upload, chunking, library management
+│       ├── config.py                # Pydantic environment configuration
+│       ├── database.py              # MongoDB Atlas client & index initialization
+│       ├── main.py                  # FastAPI application entry point & CORS
+│       ├── schemas.py               # Request/Response schemas with ObjectId mapping
+│       ├── security.py              # Password hashing & JWT token management
+│       └── services/
+│           ├── auth_service.py      # Authentication business logic
+│           └── rag_service.py       # Full-cycle RAG execution & index caching
+├── rag/
+│   ├── chunking/                    # Semantic chunker with token limits
+│   ├── embeddings/                  # SentenceTransformers with Gemini API fallback
+│   ├── generation/                  # Multi-provider LLM generators (Gemini / OpenAI)
+│   ├── ingestion/                   # Multi-format document loader (PDF, DOCX, TXT)
+│   ├── query_router/                # Query classifier for dynamic routing
+│   ├── retrieval/                   # Adaptive retrieval, budget constraints & reranker
+│   └── vector_store/                # FAISS indexing with NumPy similarity fallback
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── AuthScreen.jsx       # User authentication interface
+│   │   │   ├── ChatPanel.jsx        # Research chat, Markdown rendering & telemetry pills
+│   │   │   ├── DocumentsPanel.jsx   # Document library management & upload zone
+│   │   │   ├── LiveAnalysisPanel.jsx# Recharts analytics graphs & pipeline visualizer
+│   │   │   └── Sidebar.jsx          # Workspace navigation & conversation history
+│   │   ├── services/
+│   │   │   └── api.js               # Centralized client for FastAPI endpoints
+│   │   ├── App.jsx                  # Main application shell & router
+│   │   └── index.css                # Dark theme design system
+│   └── package.json
+├── requirements.txt                 # Backend Python dependencies
+├── .env.example                     # Environment template
+└── README.md
 ```
 
 ---
 
-## Installation
+## Getting Started Locally
 
-```bash
-# 1. Create a virtual environment
-python -m venv .venv
-source .venv/bin/activate         # Linux/macOS
-# .venv\Scripts\activate          # Windows
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Download NLTK sentence tokeniser
-python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab')"
-```
-
-### Optional — OpenAI API
-
-```bash
-export OPENAI_API_KEY="sk-..."
-```
-
-### Optional — HuggingFace local model
-
-```bash
-pip install transformers accelerate
-export HF_MODEL="mistralai/Mistral-7B-Instruct-v0.2"
-```
+### 1. Prerequisites
+- Python 3.10+
+- Node.js 18+ and npm
+- A [MongoDB Atlas](https://cloud.mongodb.com/) account (or local MongoDB)
+- A [Google AI Studio](https://aistudio.google.com/) API Key
 
 ---
 
-## Quick Start
+### 2. Backend Setup
 
-```bash
-# Answer a question about the bundled sample document (stub backend — no API key needed)
-python -m adaptive_rag.main \
-    --document adaptive_rag/data/sample.txt \
-    --question "What is the main contribution of the Transformer?" \
-    --backend stub \
-    --evaluate
+1. **Create and activate a virtual environment:**
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1   # On Windows
+   # source .venv/bin/activate   # On Linux/macOS
+   ```
 
-# Use OpenAI (requires OPENAI_API_KEY)
-python -m adaptive_rag.main \
-    --document my_paper.pdf \
-    --question "Summarise the methodology" \
-    --backend openai \
-    --model gpt-4o \
-    --evaluate
+2. **Install dependencies:**
+   ```powershell
+   pip install -r requirements.txt
+   ```
 
-# Save JSON output
-python -m adaptive_rag.main \
-    --document report.pdf \
-    --question "What are the key findings?" \
-    --output-json result.json
-```
+3. **Configure Environment Variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   # Database (MongoDB Atlas)
+   MONGODB_URL="mongodb+srv://<username>:<password>@<cluster-url>/?retryWrites=true&w=majority"
+   MONGODB_DB_NAME="adaptive_rag"
 
----
+   # Security
+   JWT_SECRET="generate-a-random-secure-secret-key"
+   JWT_ALGORITHM="HS256"
+   ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
-## CLI Reference
+   # LLM Backend
+   LLM_BACKEND="gemini"
+   LLM_MODEL="gemini-3.5-flash-lite"
+   GEMINI_API_KEY="your-google-ai-studio-key"
 
-| Flag            | Default            | Description                                          |
-|-----------------|--------------------|------------------------------------------------------|
-| `--document`    | *(required)*       | Path to PDF / TXT / DOCX                            |
-| `--question`    | *(required)*       | Query to answer                                      |
-| `--backend`     | `auto`             | `auto` / `openai` / `huggingface` / `stub`          |
-| `--model`       | `gpt-3.5-turbo`    | LLM model name                                       |
-| `--embed-model` | `all-MiniLM-L6-v2` | Sentence-Transformers model                          |
-| `--store-dir`   | `./index_cache`    | FAISS index cache directory                          |
-| `--rebuild`     | `false`            | Force re-index even if cache exists                  |
-| `--evaluate`    | `false`            | Compute evaluation metrics                           |
-| `--output-json` | `""`               | Write result dict to JSON file                       |
+   # Storage
+   FAISS_STORAGE_PATH="./index_cache"
+   UPLOAD_STORAGE_PATH="./data/uploads"
 
----
+   # CORS
+   CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
+   ```
 
-## Pipeline Stages
-
-### Stage 1 — Document Ingestion
-`ingestion/document_loader.py`
-
-Supports PDF (PyMuPDF → pdfplumber fallback), DOCX, TXT/Markdown.
-Extracts per-page text, cleans Unicode, guesses section titles.
-
-### Stage 1b — Adaptive Chunking
-`chunking/semantic_chunker.py`
-
-1. Splits on paragraph / double-newline boundaries.
-2. Merges blocks smaller than `min_tokens`.
-3. Splits blocks larger than `max_tokens` at sentence boundaries with configurable overlap.
-
-### Stage 2 — Embeddings + Vector Store
-`embeddings/embedder.py` · `vector_store/faiss_store.py`
-
-Batched encoding via `sentence-transformers` (default `all-MiniLM-L6-v2`).
-L2-normalised vectors stored in FAISS `IndexFlatIP` → exact cosine search.
-Index is serialised to disk; subsequent runs load from cache.
-
-### Stage 3 — Multi-Stage Retrieval
-
-| Sub-stage   | File                          | What it does                                      |
-|-------------|-------------------------------|---------------------------------------------------|
-| **3.1**     | `retrieval/retriever.py`      | Top-k cosine similarity search                   |
-| **3.2**     | `retrieval/reranker.py`       | Cross-encoder re-ranking (ms-marco MiniLM)        |
-| **3.3**     | `retrieval/adaptive_retrieval.py` | Dedup · merge · token-budget enforcement     |
-
-### Stage 4 — Query Routing
-`query_router/classifier.py`
-
-Rule-based regex classifier assigns one of:
-`factual` · `summarization` · `reasoning` · `multi_hop`
-
-Each type maps to a different `RetrievalConfig` (k, token budget, iterative flag).
-
-### Stage 5 — Long Context Handling
-Handled within chunking (adaptive chunk sizes) and the compression step
-(token budget, deduplication, section-aware merging).
-
-### Stage 6 — LLM Generation
-`generation/generator.py`
-
-Builds a structured prompt `[context + question + instructions]` and calls:
-- **OpenAI** (any chat-completions compatible endpoint)
-- **HuggingFace** local model via `transformers.pipeline`
-- **Stub** (returns the prompt — no model required, for testing)
-
-### Stage 7 — Adaptive Feedback Loop
-`main.py` (`run_pipeline`)
-
-If the generated answer is short / contains "I don't know", the pipeline
-automatically expands retrieval (2× k) and regenerates (up to `max_feedback_loops` times).
-
-### Stage 8 — Evaluation Metrics
-`evaluation/metrics.py`
-
-| Metric                | Method                                              |
-|-----------------------|-----------------------------------------------------|
-| `retrieval_precision` | Token-Jaccard overlap between query and chunks      |
-| `context_relevance`   | Mean cosine similarity of chunk embeddings to query |
-| `answer_faithfulness` | Fraction of answer sentences supported by context  |
-| `answer_relevance`    | Cosine similarity of answer embedding to query      |
-| `token_usage`         | Approximate total tokens consumed                   |
-| `latency_seconds`     | Wall-clock time for full pipeline                   |
-| RAGAS (optional)      | `faithfulness` + `answer_relevancy` via RAGAS lib   |
+4. **Start the FastAPI server:**
+   ```powershell
+   .venv\Scripts\python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+   ```
+   Interactive API docs will be available at: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
-## Running Tests
+### 3. Frontend Setup
 
-```bash
-pip install pytest
-python -m pytest adaptive_rag/tests/ -v
-```
+1. **Navigate to the frontend directory:**
+   ```powershell
+   cd frontend
+   ```
 
----
+2. **Install dependencies:**
+   ```powershell
+   npm install
+   ```
 
-## Performance Optimisation Suggestions
-
-| Concern          | Recommendation                                                          |
-|------------------|-------------------------------------------------------------------------|
-| Index speed      | Switch to `IndexIVFFlat` with nprobe tuning for > 100k chunks          |
-| Embedding speed  | Use `all-mpnet-base-v2` for quality or `all-MiniLM-L12-v2` for speed   |
-| Re-ranking speed | Use `cross-encoder/ms-marco-TinyBERT-L-2` for 4× faster re-ranking     |
-| Memory           | Use `IndexFlatIP` + memmap for corpora that don't fit in RAM            |
-| Latency          | Cache query embeddings; pre-compute chunk embeddings once              |
-| Long docs        | Enable hierarchical retrieval: embed section summaries separately      |
-| Accuracy         | Fine-tune the cross-encoder on domain-specific relevance labels         |
+3. **Start the Vite development server:**
+   ```powershell
+   npm run dev
+   ```
+   Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## Example Output
+## Production Deployment Guide
 
-```
-──────────────────────────────────────────────────────────────────────
-  Question   : What is the main contribution of the Transformer?
-  Query type : factual
-  Backend    : openai
-  Chunks used: 3
-  Latency    : 1.842 s
-──────────────────────────────────────────────────────────────────────
+### Deploy Backend to Render (or Railway)
+1. Push your repository to GitHub.
+2. Create a new **Web Service** on [Render.com](https://render.com).
+3. Connect your repository:
+   - **Environment**: Python 3
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+4. Add your `.env` variables (`MONGODB_URL`, `GEMINI_API_KEY`, `JWT_SECRET`, etc.).
+5. Ensure `0.0.0.0/0` is allowed in MongoDB Atlas Network Access.
 
-  ANSWER
-  ────────────────────────────────────────
-  The Transformer's main contribution is demonstrating that attention
-  alone is sufficient for high-quality sequence modelling, removing
-  the need for recurrence. This enables parallelism and scaling to
-  billions of parameters.
-
-  EVALUATION SCORES
-  ────────────────────────────────────────
-  retrieval_precision          0.8333
-  context_relevance            0.7241
-  answer_faithfulness          0.8750
-  answer_relevance             0.8102
-  token_usage                  487
-  latency_seconds              1.842
-
-  RETRIEVED CHUNKS (top-3 shown)
-  ────────────────────────────────────────
-  [1] 9. Conclusion  (score=8.421)
-      The Transformer's main contribution is demonstrating that attention
-      alone is sufficient for high-quality sequence modelling…
-──────────────────────────────────────────────────────────────────────
-```
+### Deploy Frontend to Vercel
+1. Create a new project on [Vercel.com](https://vercel.com).
+2. Select your repository and set the **Root Directory** to `frontend`.
+3. Add the environment variable:
+   - `VITE_API_URL` = `https://your-backend-service.onrender.com`
+4. Click **Deploy**.
 
 ---
 
 ## License
 
-MIT — free for academic and research use.
+This project is licensed under the MIT License.
