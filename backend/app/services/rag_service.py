@@ -138,17 +138,28 @@ class RAGService:
         # --------------------------------------------------------
 
         if config_path.exists():
-
             print(
                 f"[RAGService] Loading index: "
                 f"{index_path}"
             )
-
             vector_store.load(
                 str(index_path)
             )
 
-            return vector_store
+            # Check for embedding dimension compatibility
+            if vector_store.dim == embedder.embedding_dim:
+                return vector_store
+
+            print(
+                f"[RAGService] Index dimension mismatch! "
+                f"Cached index dim={vector_store.dim}, but active embedder dim={embedder.embedding_dim}. "
+                f"Rebuilding index automatically..."
+            )
+            shutil.rmtree(index_path, ignore_errors=True)
+            vector_store = FAISSVectorStore(
+                dim=embedder.embedding_dim,
+                metric="cosine",
+            )
 
         # --------------------------------------------------------
         # Build new index
